@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>كشف موظف – MadServ</title>
+<style>
+  body{font-family:system-ui,-apple-system,Segoe UI,Tahoma,Arial,sans-serif;margin:0;background:#f6f7fb;color:#111}
+  header{background:#111;color:#fff;padding:16px 20px;display:flex;justify-content:space-between;align-items:center}
+  main{max-width:900px;margin:0 auto;padding:20px}
+  .card{background:#fff;border:1px solid #e6e8ee;border-radius:12px;box-shadow:0 1px 2px rgba(0,0,0,.04);padding:16px;margin-bottom:16px}
+  .row{display:flex;gap:12px;flex-wrap:wrap}
+  input,textarea,select{border:1px solid #d7dbe4;border-radius:10px;padding:10px 12px;background:#fafbff}
+  button{border:0;border-radius:10px;padding:10px 14px;cursor:pointer;background:#111;color:#fff}
+  .muted{color:#6b7280;font-size:12px;margin-inline-start:8px}
+</style>
+<script src="app.js"></script>
+<script>
+function guard(){ if(!localStorage.getItem('madserv_token')) location.href='login.html'; }
+document.addEventListener('DOMContentLoaded', guard);
+</script>
+</head>
+<body>
+<header>
+  <div>كشف الموظف</div>
+  <nav><a href="hq.html" style="color:#fff">لوحة المدراء</a></nav>
+</header>
+
+<main>
+  <div class="card">
+    <h3>الهوية</h3>
+    <div class="row">
+      <div><label>الرقم</label><input id="id" disabled></div>
+      <div style="flex:1"><label>الاسم</label><input id="name"></div>
+      <div>
+        <label>الحالة</label>
+        <select id="status"><option value="active">نشط</option><option value="paused">موقوف</option></select>
+      </div>
+    </div>
+    <div class="row">
+      <div style="flex:1"><label>ملاحظة</label><input id="note" placeholder="ملاحظات مختصرة"></div>
+    </div>
+    <div class="row">
+      <button onclick="saveIdent()">حفظ الهوية</button>
+      <span id="savemsg" class="muted"></span>
+    </div>
+  </div>
+
+  <div class="card">
+    <h3>الملف المالي</h3>
+    <div class="row">
+      <div><label>غرامة</label><input id="fine" type="number" value="0"></div>
+      <div><label>اقتطاع شهري</label><input id="deduct" type="number" value="0"></div>
+    </div>
+    <div class="row">
+      <button onclick="saveFin()">حفظ الملف المالي</button>
+      <span id="finmsg" class="muted"></span>
+    </div>
+  </div>
+
+  <div class="card">
+    <h3>تغيير الرقم الوظيفي</h3>
+    <div class="row">
+      <div><label>رقم جديد</label><input id="newid" placeholder="مثال: 42135"></div>
+      <button onclick="changeId()">تغيير</button>
+      <span id="idmsg" class="muted"></span>
+    </div>
+  </div>
+</main>
+
+<script>
+function param(k){ const u=new URL(location.href); return u.searchParams.get(k); }
+const empId = param('id');
+document.getElementById('id').value = empId;
+
+async function load(){
+  const r = await api('/api/employees/'+encodeURIComponent(empId));
+  document.getElementById('name').value = r.name||'';
+  document.getElementById('status').value = r.status||'active';
+  document.getElementById('note').value = r.note||'';
+  document.getElementById('fine').value = (r.finance && r.finance.fine) || 0;
+  document.getElementById('deduct').value = (r.finance && r.finance.deduct) || 0;
+}
+async function saveIdent(){
+  await api('/api/employees/'+encodeURIComponent(empId), {
+    method:'PUT',
+    body: JSON.stringify({
+      name: document.getElementById('name').value.trim(),
+      status: document.getElementById('status').value,
+      note: document.getElementById('note').value.trim()
+    })
+  });
+  document.getElementById('savemsg').textContent = 'تم الحفظ.';
+  setTimeout(()=>document.getElementById('savemsg').textContent='', 1200);
+}
+async function saveFin(){
+  await api('/api/employees/'+encodeURIComponent(empId)+'/finance', {
+    method:'PUT',
+    body: JSON.stringify({
+      fine: Number(document.getElementById('fine').value||0),
+      deduct: Number(document.getElementById('deduct').value||0)
+    })
+  });
+  document.getElementById('finmsg').textContent = 'تم حفظ الملف المالي.';
+  setTimeout(()=>document.getElementById('finmsg').textContent='', 1200);
+}
+async function changeId(){
+  const nid = document.getElementById('newid').value.trim();
+  if(!nid) { document.getElementById('idmsg').textContent = 'اكتب الرقم الجديد.'; return; }
+  await api('/api/employees/'+encodeURIComponent(empId)+'/change-id', {
+    method:'POST',
+    body: JSON.stringify({ newId: nid })
+  });
+  document.getElementById('idmsg').textContent = 'تم تغيير الرقم.';
+  setTimeout(()=>{
+    location.href = 'profile.html?id='+encodeURIComponent(nid);
+  }, 600);
+}
+load();
+</script>
+</body>
+</html>

@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>القائمة السوداء – MadServ</title>
+<style>
+  body{font-family:system-ui,-apple-system,Segoe UI,Tahoma,Arial,sans-serif;margin:0;background:#f6f7fb;color:#111}
+  header{background:#111;color:#fff;padding:16px 20px;display:flex;justify-content:space-between;align-items:center}
+  main{max-width:900px;margin:0 auto;padding:20px}
+  .card{background:#fff;border:1px solid #e6e8ee;border-radius:12px;box-shadow:0 1px 2px rgba(0,0,0,.04);padding:16px;margin-bottom:16px}
+  input{border:1px solid #d7dbe4;border-radius:10px;padding:10px 12px;background:#fafbff}
+  button{border:0;border-radius:10px;padding:10px 14px;cursor:pointer;background:#111;color:#fff}
+  table{width:100%;border-collapse:collapse}
+  th,td{text-align:right;padding:10px;border-bottom:1px solid #eef0f5;font-size:14px}
+  th{color:#6b7280;background:#fafbff}
+</style>
+<script src="app.js"></script>
+<script>
+function guard(){ if(!localStorage.getItem('madserv_token')) location.href='login.html'; }
+document.addEventListener('DOMContentLoaded', guard);
+</script>
+</head>
+<body>
+<header>
+  <div>القائمة السوداء – MadServ</div>
+  <nav><a href="hq.html" style="color:#fff">لوحة المدراء</a></nav>
+</header>
+
+<main>
+  <div class="card">
+    <div style="display:flex;gap:12px;flex-wrap:wrap;align-items:flex-end">
+      <div style="flex:1"><input id="name" placeholder="الاسم"></div>
+      <div style="flex:1"><input id="reason" placeholder="السبب"></div>
+      <div><button onclick="add()">إضافة</button></div>
+    </div>
+  </div>
+
+  <div class="card">
+    <table>
+      <thead><tr><th>#</th><th>الاسم</th><th>السبب</th><th>الحالة</th><th>حذف</th></tr></thead>
+      <tbody id="grid"></tbody>
+    </table>
+  </div>
+</main>
+
+<script>
+async function loadList(){
+  const rows = await api('/api/blacklist');
+  const tb = document.getElementById('grid');
+  tb.innerHTML = '';
+  rows.forEach(r => {
+    tb.insertAdjacentHTML('beforeend', `<tr>
+      <td>${r.id}</td>
+      <td>${r.name}</td>
+      <td>${r.reason}</td>
+      <td>${r.status||''}</td>
+      <td><button onclick="del(${r.id})" style="background:#e53935">حذف</button></td>
+    </tr>`);
+  });
+}
+async function add(){
+  const name = document.getElementById('name').value.trim();
+  const reason = document.getElementById('reason').value.trim();
+  if(!name || !reason) return;
+  await api('/api/blacklist', {method:'POST', body: JSON.stringify({name, reason})});
+  document.getElementById('name').value='';
+  document.getElementById('reason').value='';
+  await loadList();
+}
+async function del(id){
+  if(!confirm('حذف السجل؟')) return;
+  await api('/api/blacklist/'+id, {method:'DELETE'});
+  await loadList();
+}
+loadList();
+</script>
+</body>
+</html>

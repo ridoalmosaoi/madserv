@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>لوحة المدراء والمشرفين – MadServ</title>
+<style>
+  body{font-family:system-ui,-apple-system,Segoe UI,Tahoma,Arial,sans-serif;margin:0;background:#f6f7fb;color:#111}
+  header{background:#111;color:#fff;padding:16px 20px;display:flex;justify-content:space-between;align-items:center}
+  main{max-width:1200px;margin:0 auto;padding:20px}
+  .card{background:#fff;border:1px solid #e6e8ee;border-radius:12px;box-shadow:0 1px 2px rgba(0,0,0,.04);padding:16px;margin-bottom:16px}
+  table{width:100%;border-collapse:collapse}
+  th,td{text-align:right;padding:10px;border-bottom:1px solid #eef0f5;font-size:14px}
+  th{color:#6b7280;background:#fafbff}
+  input{border:1px solid #d7dbe4;border-radius:10px;padding:10px 12px;background:#fafbff}
+  .btn{border:0;border-radius:10px;padding:8px 12px;cursor:pointer;background:#111;color:#fff}
+</style>
+<script src="app.js"></script>
+<script>
+function guard(){ if(!localStorage.getItem('madserv_token')) location.href='login.html'; }
+document.addEventListener('DOMContentLoaded', guard);
+</script>
+</head>
+<body>
+<header>
+  <div>لوحة المدراء والمشرفين – MadServ</div>
+  <nav><a href="admin.html" style="color:#fff">لوحة الموظفين</a> | <a href="blacklist.html" style="color:#fff">القائمة السوداء</a></nav>
+</header>
+
+<main>
+  <div class="card">
+    <h3>المدراء</h3>
+    <input id="qA" placeholder="بحث…">
+    <table>
+      <thead><tr><th>الرقم</th><th>الاسم</th><th>الدور</th><th>ملاحظات</th></tr></thead>
+      <tbody id="aGrid"></tbody>
+    </table>
+  </div>
+
+  <div class="card">
+    <h3>المشرفون</h3>
+    <input id="qS" placeholder="بحث…">
+    <table>
+      <thead><tr><th>الرقم</th><th>الاسم</th><th>الدور</th><th>ملاحظات</th></tr></thead>
+      <tbody id="sGrid"></tbody>
+    </table>
+  </div>
+
+  <div class="card">
+    <h3>الموظفون</h3>
+    <input id="qE" placeholder="بحث…">
+    <table>
+      <thead><tr><th>الرقم</th><th>الاسم</th><th>الحالة</th><th>ملاحظة</th><th>كشف</th></tr></thead>
+      <tbody id="eGrid"></tbody>
+    </table>
+  </div>
+</main>
+
+<script>
+function filterInput(boxId, data, grid, rowRenderer){
+  const q = document.getElementById(boxId).value.trim().toLowerCase();
+  grid.innerHTML = '';
+  data.filter(r => JSON.stringify(r).toLowerCase().includes(q)).forEach(r => grid.insertAdjacentHTML('beforeend', rowRenderer(r)));
+}
+
+async function loadHQ(){
+  const admins = await api('/api/admins');
+  const supervisors = await api('/api/supervisors');
+  const employees = await api('/api/employees');
+
+  const aGrid = document.getElementById('aGrid');
+  const sGrid = document.getElementById('sGrid');
+  const eGrid = document.getElementById('eGrid');
+
+  const aRow = r => `<tr><td>${r.id}</td><td>${r.name}</td><td>${r.role}</td><td>${r.note||''}</td></tr>`;
+  const sRow = r => `<tr><td>${r.id}</td><td>${r.name}</td><td>${r.role}</td><td>${r.note||''}</td></tr>`;
+  const eRow = r => `<tr><td>${r.id}</td><td>${r.name||''}</td><td>${r.status}</td><td>${r.note||''}</td><td><a href="profile.html?id=${encodeURIComponent(r.id)}">فتح</a></td></tr>`;
+
+  admins.forEach(r=>aGrid.insertAdjacentHTML('beforeend', aRow(r)));
+  supervisors.forEach(r=>sGrid.insertAdjacentHTML('beforeend', sRow(r)));
+  employees.forEach(r=>eGrid.insertAdjacentHTML('beforeend', eRow(r)));
+
+  document.getElementById('qA').addEventListener('input', ()=>filterInput('qA', admins, aGrid, aRow));
+  document.getElementById('qS').addEventListener('input', ()=>filterInput('qS', supervisors, sGrid, sRow));
+  document.getElementById('qE').addEventListener('input', ()=>filterInput('qE', employees, eGrid, eRow));
+}
+loadHQ();
+</script>
+</body>
+</html>

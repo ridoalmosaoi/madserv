@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>MadServ – تسجيل الدخول</title>
+<style>
+  body{font-family:system-ui,-apple-system,Segoe UI,Tahoma,Arial,sans-serif;margin:0;display:flex;align-items:center;justify-content:center;min-height:100vh;background:#0f172a;color:#e5e7eb}
+  .card{background:#111827;border:1px solid #1f2937;border-radius:16px;box-shadow:0 10px 30px rgba(0,0,0,.35);padding:22px;max-width:420px;width:100%}
+  h1{margin:0 0 10px;font-size:20px}
+  input{width:100%;padding:12px;border-radius:10px;border:1px solid #334155;background:#0b1220;color:#e2e8f0}
+  button{margin-top:12px;width:100%;padding:12px;border:0;border-radius:10px;background:#22a559;color:#08140c;cursor:pointer;font-size:14px}
+  .msg{margin-top:8px;font-size:13px}
+  a{color:#93c5fd}
+</style>
+<script src="app.js"></script>
+</head>
+<body>
+  <div class="card">
+    <h1>تسجيل الدخول</h1>
+    <input id="pwd" type="password" placeholder="كلمة المرور (##77)">
+    <button onclick="login()">دخول</button>
+    <div id="msg" class="msg"></div>
+    <p class="msg">بعد الدخول، افتح <a href="admin.html">لوحة الموظفين</a> أو <a href="hq.html">لوحة المدراء</a>.</p>
+  </div>
+<script>
+async function login(){
+  const pwd = document.getElementById('pwd').value;
+  try{
+    const r = await api('/api/login', {method:'POST', body:JSON.stringify({password: pwd})});
+    localStorage.setItem('madserv_token', r.token);
+    window.location.href = 'hq.html';
+  }catch(e){
+    document.getElementById('msg').textContent = 'خطأ: كلمة المرور غير صحيحة.';
+  }
+}
+</script>
+</body>
+</html>

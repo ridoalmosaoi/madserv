@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>لوحة الموظفين – MadServ</title>
+<style>
+  body{font-family:system-ui,-apple-system,Segoe UI,Tahoma,Arial,sans-serif;margin:0;background:#f6f7fb;color:#111}
+  header{background:#111;color:#fff;padding:16px 20px;display:flex;justify-content:space-between;align-items:center}
+  main{max-width:1100px;margin:0 auto;padding:20px}
+  .card{background:#fff;border:1px solid #e6e8ee;border-radius:12px;box-shadow:0 1px 2px rgba(0,0,0,.04);padding:16px;margin-bottom:16px}
+  .row{display:flex;gap:12px;flex-wrap:wrap;align-items:flex-end}
+  input,select{border:1px solid #d7dbe4;border-radius:10px;padding:10px 12px;background:#fafbff}
+  button{border:0;border-radius:10px;padding:10px 14px;cursor:pointer;background:#111;color:#fff}
+  table{width:100%;border-collapse:separate;border-spacing:0 10px}
+  thead th{font-size:12px;color:#6b7280;text-align:right;padding:0 10px}
+  tbody tr{background:#fff;border:1px solid #e6e8ee}
+  tbody td{padding:12px 10px;border-top:1px solid #e6e8ee;border-bottom:1px solid #e6e8ee}
+</style>
+<script src="app.js"></script>
+<script>
+function guard(){ if(!localStorage.getItem('madserv_token')) location.href='login.html'; }
+document.addEventListener('DOMContentLoaded', guard);
+</script>
+</head>
+<body>
+<header>
+  <div>لوحة الموظفين – MadServ</div>
+  <nav><a href="hq.html" style="color:#fff">لوحة المدراء</a> | <a href="blacklist.html" style="color:#fff">القائمة السوداء</a></nav>
+</header>
+
+<main>
+  <div class="card">
+    <div class="row">
+      <div><input id="search" placeholder="ابحث بالرقم/الاسم"></div>
+      <div><button onclick="loadEmp()">تحديث</button></div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="row">
+      <div><input id="id" placeholder="رقم الموظف (ID)"></div>
+      <div><input id="name" placeholder="الاسم"></div>
+      <div>
+        <select id="status">
+          <option value="active">نشط</option>
+          <option value="paused">موقوف</option>
+        </select>
+      </div>
+      <div><input id="note" placeholder="ملاحظة"></div>
+      <div><button onclick="add()">إضافة</button></div>
+    </div>
+  </div>
+
+  <div class="card">
+    <table>
+      <thead><tr><th>الرقم</th><th>الاسم</th><th>الحالة</th><th>ملاحظة</th><th>إجراءات</th></tr></thead>
+      <tbody id="grid"></tbody>
+    </table>
+  </div>
+</main>
+
+<script>
+let EMP = [];
+
+function rowHTML(r){
+  return `<tr data-id="${r.id}">
+    <td>${r.id}</td>
+    <td contenteditable="true" class="c-name">${r.name||''}</td>
+    <td>
+      <select class="c-status">
+        <option value="active" ${r.status==='active'?'selected':''}>نشط</option>
+        <option value="paused" ${r.status!=='active'?'selected':''}>موقوف</option>
+      </select>
+    </td>
+    <td contenteditable="true" class="c-note">${r.note||''}</td>
+    <td>
+      <button onclick="saveRow(this)">حفظ</button>
+      <button onclick="profile(this)">كشف</button>
+      <button onclick="delRow(this)" style="background:#e53935">حذف</button>
+    </td>
+  </tr>`;
+}
+
+async function loadEmp(){
+  const all = await api('/api/employees');
+  EMP = all;
+  render(all);
+}
+
+function render(list){
+  const q = (document.getElementById('search').value||'').toLowerCase();
+  const tb = document.getElementById('grid');
+  tb.innerHTML = '';
+  list.filter(r=>JSON.stringify(r).toLowerCase().includes(q)).forEach(r=>{
+    tb.insertAdjacentHTML('beforeend', rowHTML(r));
+  });
+}
+
+async function add(){
+  const id = document.getElementById('id').value.trim();
+  const name = document.getElementById('name').value.trim();
+  const status = document.getElementById('status').value;
+  const note = document.getElementById('note').value.trim();
+  await api('/api/employees', {method:'POST', body:JSON.stringify({id,name,status,note})});
+  document.getElementById('id').value='';
+  document.getElementById('name').value='';
+  document.getElementById('note').value='';
+  await loadEmp();
+}
+
+async function saveRow(btn){
+  const tr = btn.closest('tr');
+  const id = tr.dataset.id;
+  const name = tr.querySelector('.c-name').textContent.trim();
+  const status = tr.querySelector('.c-status').value;
+  const note = tr.querySelector('.c-note').textContent.trim();
+  await api('/api/employees/'+id, {method:'PUT', body:JSON.stringify({name,status,note})});
+  await loadEmp();
+}
+
+function profile(btn){
+  const id = btn.closest('tr').dataset.id;
+  location.href = 'profile.html?id='+encodeURIComponent(id);
+}
+
+async function delRow(btn){
+  const id = btn.closest('tr').dataset.id;
+  if(!confirm('حذف الموظف؟')) return;
+  await api('/api/employees/'+id, {method:'DELETE'});
+  await loadEmp();
+}
+
+document.getElementById('search').addEventListener('input', ()=>render(EMP));
+loadEmp();
+</script>
+</body>
+</html>
