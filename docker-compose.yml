@@ -1,0 +1,17 @@
+version: "3.9"
+
+services:
+  madserv:
+    build: .
+    container_name: madserv_app
+    ports:
+      - "3000:3000"
+    environment:
+      - NODE_ENV=production
+    volumes:
+      # حفظ قاعدة البيانات وملفات الجورنال في مجلد دائم خارج الحاوية
+      - madserv_data:/app/data
+    restart: unless-stopped
+
+volumes:
+  madserv_data:
