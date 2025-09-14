@@ -2,24 +2,168 @@
 <html lang="ar" dir="rtl">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>MadServ – فهرس</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>NovaChat – دردشة IRC</title>
+<meta name="color-scheme" content="light dark">
 <style>
-  body{font-family:system-ui,-apple-system,Segoe UI,Tahoma,Arial,sans-serif;margin:0;background:#f7fafc;color:#111}
-  header{background:#111;color:#fff;padding:16px 20px}
-  main{max-width:720px;margin:0 auto;padding:20px}
-  a{display:block;margin:8px 0;padding:10px 12px;border:1px solid #e5e7eb;border-radius:10px;text-decoration:none;color:#111;background:#fff}
-  .tip{background:#fffbeb;border:1px solid #fde68a;color:#92400e;padding:10px;border-radius:10px;margin:12px 0}
+  :root{
+    --bg:#0f172a; --card:#0b1220; --muted:#94a3b8; --text:#e5e7eb; --accent:#22a559; --ink:#0f172a;
+    --line:#1f2937; --panel:#111827; --pill:#e5e7eb;
+  }
+  @media (prefers-color-scheme: light){
+    :root{ --bg:#f7fafc; --card:#ffffff; --text:#0f172a; --muted:#475569; --accent:#16a34a; --ink:#0f172a; --line:#e5e7eb; --panel:#ffffff; --pill:#1f2937; }
+  }
+  *{box-sizing:border-box}
+  body{margin:0;font-family:system-ui,-apple-system,Segoe UI,Tahoma,Arial,sans-serif;background:linear-gradient(120deg,var(--bg),#0b132b 60%,var(--bg));color:var(--text)}
+  header{padding:18px 20px;display:flex;align-items:center;justify-content:space-between;background:transparent}
+  .brand{display:flex;align-items:center;gap:10px}
+  .logo{inline-size:36px;block-size:36px;border-radius:10px;background:conic-gradient(from 180deg,#22a559,#10b981,#06b6d4,#22a559)}
+  .title{font-weight:700;letter-spacing:.3px}
+  .wrap{max-width:1100px;margin:0 auto;padding:0 16px}
+  .hero{padding:8px 0 16px}
+  .card{background:var(--card); border:1px solid var(--line); border-radius:16px; padding:16px; box-shadow:0 10px 30px rgba(0,0,0,.22)}
+  .row{display:flex;gap:12px;flex-wrap:wrap;align-items:center}
+  .row > *{flex:1 1 auto}
+  label{display:block;margin:6px 0 6px 0;font-size:14px;color:var(--muted)}
+  input,select,button{width:100%;padding:12px;border-radius:12px;border:1px solid var(--line);background:#0b1220;color:var(--text)}
+  @media (prefers-color-scheme: light){ input,select,button{background:#fff} }
+  button{cursor:pointer}
+  .btn{background:#111;color:#fff;border-color:#111}
+  .btn.ghost{background:transparent;color:var(--text)}
+  .grid{display:grid;grid-template-columns:2fr 3fr;gap:16px}
+  @media (max-width: 860px){ .grid{grid-template-columns:1fr} }
+  .badge{display:inline-flex;align-items:center;gap:8px;border:1px solid var(--line);border-radius:999px;padding:6px 12px;font-size:12px;background:rgba(255,255,255,.06)}
+  .ok{color:#22c55e}
+  .warn{color:#f59e0b}
+  .chanserv{background:#022d16;border-color:#065f46}
+  .section-title{margin:0 0 8px;font-size:15px;color:var(--muted)}
+  .note{font-size:12px;color:var(--muted)}
+  .pill{display:inline-block;border:1px solid var(--line);border-radius:999px;padding:4px 10px;font-size:12px}
+  .iframeWrap{border:1px solid var(--line);border-radius:16px;overflow:hidden;background:#000;min-block-size:60vh}
+  iframe{inline-size:100%;block-size:70vh;border:0}
+  footer{padding:24px;color:var(--muted);text-align:center}
 </style>
 </head>
 <body>
-<header><h1>MadServ – فهرس</h1></header>
-<main>
-  <div class="tip">أولاً افتح <b>تسجيل الدخول</b> ثم انتقل إلى اللوحات.</div>
-  <a href="login.html">🔐 تسجيل الدخول</a>
-  <a href="hq.html">🛡️ لوحة المدراء والمشرفين</a>
-  <a href="admin.html">🗂️ لوحة الموظفين</a>
-  <a href="blacklist.html">⚫ القائمة السوداء</a>
-</main>
+  <header class="wrap">
+    <div class="brand">
+      <div class="logo" aria-hidden="true"></div>
+      <div>
+        <div class="title">NovaChat</div>
+        <div class="note">متصفح دردشة IRC سريع – صفحة واحدة</div>
+      </div>
+    </div>
+    <div class="row" style="flex:0 0 auto;gap:8px">
+      <span id="roleBadge" class="badge"><span>وضع زائر</span></span>
+    </div>
+  </header>
+
+  <main class="wrap hero">
+    <div class="grid">
+      <section class="card">
+        <h3 class="section-title">الإعداد السريع</h3>
+        <div class="row">
+          <div style="flex:1">
+            <label>خادم IRC</label>
+            <input id="ircServer" value="irc.libera.chat" dir="ltr">
+          </div>
+          <div style="flex:1">
+            <label>القناة</label>
+            <input id="ircChannel" value="#novachat" dir="ltr">
+          </div>
+        </div>
+        <div class="row">
+          <div style="flex:1">
+            <label>الكنية (Nickname)</label>
+            <input id="ircNick" placeholder="اكتب اسمك المستعار" dir="ltr">
+          </div>
+          <div style="flex:0 0 auto;min-inline-size:160px">
+            <label>&nbsp;</label>
+            <button class="btn" id="openChat">فتح الدردشة</button>
+          </div>
+        </div>
+        <div class="note" style="margin-top:6px">
+          تلميح: لا نعرض أي أوامر حظر/كتم في الواجهة. إن دخل مشرف معرّف، تظهر شارة <span class="pill">ChanServ تم توكيل</span> فقط.
+        </div>
+
+        <div style="margin-top:14px">
+          <details class="card" style="background:transparent;border-style:dashed">
+            <summary class="section-title">خيارات المشرف (اختيارية)</summary>
+            <label>أسماء المشرفين (افصل بينها بفواصل)</label>
+            <input id="mods" value="Admin,Operator,SysOp" dir="ltr">
+            <div class="note">سيتم الكشف تلقائيًا: لو تطابق اسمك أحد هذه الأسماء، تُفعّل شارة "ChanServ تم توكيل".</div>
+          </details>
+        </div>
+      </section>
+
+      <section class="card">
+        <h3 class="section-title">الدردشة</h3>
+        <div class="iframeWrap">
+          <iframe id="ircFrame" title="NovaChat IRC"
+            src="about:blank"
+            allow="clipboard-read; clipboard-write; encrypted-media; fullscreen; picture-in-picture"
+          ></iframe>
+        </div>
+        <div style="margin-top:10px" class="note">يستخدم NovaChat عميل KiwiIRC عبر إطار آمن. لا توجد أوامر إدارية ظاهرة للمستخدمين.</div>
+      </section>
+    </div>
+  </main>
+
+  <footer>
+    NovaChat • لا يتم تخزين أي بيانات على هذه الصفحة. كل الاتصالات تتم مباشرة مع خادم IRC الذي تختاره.
+  </footer>
+
+<script>
+const el = (id)=>document.getElementById(id);
+const roleBadge = el('roleBadge');
+function setBadge(text, cls=''){ roleBadge.className='badge '+cls; roleBadge.innerHTML = text; }
+
+function buildKiwiURL(server, channel, nick){
+  const base = 'https://kiwiirc.com/nextclient/#';
+  const srv = (server||'').trim();
+  let ch = (channel||'').trim();
+  if(ch && !ch.startsWith('#')) ch = '#'+ch;
+  const params = nick ? ('?nick=' + encodeURIComponent(nick)) : '';
+  return base + encodeURIComponent(srv) + '/' + encodeURIComponent(ch) + params;
+}
+
+function normalizeList(s){
+  return (s||'').split(',').map(x=>x.trim()).filter(Boolean).map(x=>x.toLowerCase());
+}
+
+function checkModerator(nick, list){
+  if(!nick) return false;
+  const n = nick.trim().toLowerCase();
+  return list.includes(n);
+}
+
+function applyModeratorUI(isMod){
+  if(isMod){
+    setBadge('<span class="ok">ChanServ تم توكيل</span>', 'chanserv');
+  }else{
+    setBadge('<span>وضع زائر</span>');
+  }
+}
+
+const qs = new URL(location.href).searchParams;
+if(qs.get('server')) el('ircServer').value = qs.get('server');
+if(qs.get('channel')) el('ircChannel').value = qs.get('channel');
+if(qs.get('nick')) el('ircNick').value = qs.get('nick');
+if(qs.get('mods')) el('mods').value = qs.get('mods');
+
+function openChatNow(){
+  const server = el('ircServer').value;
+  const channel = el('ircChannel').value;
+  const nick = el('ircNick').value;
+  const mods = normalizeList(el('mods').value);
+  const isMod = checkModerator(nick, mods);
+  applyModeratorUI(isMod);
+
+  const url = buildKiwiURL(server, channel, nick);
+  el('ircFrame').src = url;
+}
+
+el('openChat').addEventListener('click', openChatNow);
+</script>
 </body>
 </html>
